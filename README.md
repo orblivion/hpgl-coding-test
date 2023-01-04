@@ -1,8 +1,8 @@
 # Programming test for the Inkscape Python Developer contract role (2023 Q1)
 
-This repository contains the instructions to perform the programming test of the role that the Inkscape project is currently filling.
+This repository contains the instructions to perform the programming test of the role that the Inkscape project is currently looking to fill.
 
-Note that this is not the file format that will be implemented during the contract. The HPGL file format is already supported by Inkscape - the code submitted by the candidates will be used solely for the purpose of selecting the candidates. 
+Note that this is not the file format that will be implemented during the contract. The HPGL file format is already supported by Inkscape - the code submitted by the candidates will be used solely for the purpose of selecting the candidates, so no worries that we freeboot your work!
 
 This readme contains:
  * the task instructions,
@@ -45,10 +45,10 @@ The assignment must be submitted by Jan 23, 23:59 UTC.
 
 ## Unit tests / Development setup
 
-Please create a **private fork** of this repository.
-
-TODO (install inkex master from sources, run unit tests)
-
+1. Please create a **private fork** of this repository and clone it.
+1. Install inkex from sources (e.g. in a virtualenv) <br> `pip install 'inkex @ git+https://gitlab.com/inkscape/extensions@master' `
+1. Run pytest in the repository's root folder. The dummy tests (which test the testing mechanism) will succeed, but the actual unit test in `test_paths.py` will fail. Your task is to change the code in `hpgl_input/hpgl_input.py` (marked by TODO) such that the test will pass.
+1. (Not required) - you can symlink the local clone into `~/.config/inkscape/extensions` (or `%AppData%\Inkscape\extensions`) in order to get your extension to work with Inkscape. Then, create a file with the extension `.plt` - for example, the sample file in tests (which is a modified version of https://github.com/spustlik/plotr/blob/master/Plotr/Samples/space-COLUMBIA.hpgl), and open it with Inkscape.
 ## Submission
 
 Please invite Gitlab user @joneuhauser into your private fork with Reporter access permissions.
