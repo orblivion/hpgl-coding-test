@@ -62,7 +62,7 @@ class HpglInput(inkex.InputExtension):
         """Convert a document stored in string to SVG elements."""
 
         # TODO: Add your code here
-        # parse the document, which is parsed as utf8-decoded string in self.document,
+        # parse the document, which is provided as utf8-decoded string in self.document,
         # i.e. create path elements (inkex.PathElement), set their .path, and .style,
         # and append them to "layer"
 

@@ -89,8 +89,8 @@ class HPGLTest(TestCase):
         """Runs a document and cleans the output for comparison"""
         result = self.run_to_layer(string)
         self.assertEqual(
-            self.get_equivalent_path(result),
-            inkex.Path(comparison).to_absolute(),
+            self.get_equivalent_path(result).to_superpath(),
+            inkex.Path(comparison).to_absolute().to_superpath(),
             "The effective path data is different",
         )
 
@@ -98,6 +98,12 @@ class HPGLTest(TestCase):
             result[0].specified_style()("stroke"),
             inkex.Color("black"),
             "The stroke color must be black",
+        )
+
+        self.assertEqual(
+            result[0].specified_style()("fill"),
+            None,
+            "The fill must be 'none'",
         )
         self.assertGreater(
             result.to_dimensionless(result[0].specified_style()("stroke-width")),
