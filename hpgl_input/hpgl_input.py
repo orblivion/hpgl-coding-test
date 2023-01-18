@@ -312,6 +312,36 @@ class HPGLParseException(Exception):
     pass
 
 
+def extract_param_pairs(cmd):
+    """Helper function for extracting and preparing pairs of params from a parsed command"""
+
+    # Find the grouped params within the parse result
+    parsed_params = []
+    for token in cmd:
+        if isinstance(token, pp.ParseResults):
+            parsed_params = list(token)
+
+    # Filter out any non-numeric tokens that were parsed, convert them to ints
+    int_params = []
+    for param in parsed_params:
+        # For lack of a convenient "does this match?" function
+        try:
+            numeric_parameter.parse_string(param)
+        except pp.ParseException:
+            pass
+        else:
+            # TODO - clamp the numbers per the spec. also confirm that it's not a float
+            int_params.append(int(param))
+
+    # Put them in pairs
+    param_pairs = []
+    while int_params:
+        x, y, *int_params = int_params
+        param_pairs.append((x, y))
+
+    return param_pairs
+
+
 # We need to parse one command at a time because label terminator (defined in
 # DT) affects parsing of LB. So long as we're doing this, we will only yield
 # the commands that we care about: PD and PU.
@@ -356,33 +386,12 @@ def parse_hp_gl(document):
                 "Parsing began after %d characters" % first,
             )
 
+        # Yield the commands we care about
         if this_command[0] in (mn_pen_up, mn_pen_down):
-            # TODO - put this in a function
-
-            # Find the grouped params within the parse result
-            parsed_params = []
-            for token in this_command:
-                if isinstance(token, pp.ParseResults):
-                    parsed_params = list(token)
-
-            int_params = []
-            # For lack of a convenient "does this match?" function
-            for param in parsed_params:
-                try:
-                    numeric_parameter.parse_string(param)
-                except pp.ParseException:
-                    pass
-                else:
-                    # TODO - clamp the numbers per the spec. also confirm that it's not a float
-                    int_params.append(int(param))
-
-            param_pairs = []
-            while int_params:
-                x, y, *int_params = int_params
-                param_pairs.append((x, y))
-
+            param_pairs = extract_param_pairs(this_command)
             yield this_command[0], param_pairs
 
+        # Handle updating the label terminator
         if len(this_command) == 2 and this_command[0] == mn_define_label_terminator:
             label_terminator = this_command[1]
         if (
