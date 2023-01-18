@@ -1,5 +1,6 @@
 import pyparsing as pp
 
+from tester import HPGLTest
 from hpgl_input.hpgl_input import (
     numeric_parameter,
     first_numeric_parameter_pair,
@@ -15,9 +16,8 @@ from hpgl_input.hpgl_input import (
     cmd_label,
     cmd_other,
 )
-from tester import HPGLTest
 
-class HPGLParsingTest(HPGLTest):
+class HPGLPatternsTest(HPGLTest):
     def assert_parse_result(self, parser, input_string, expected_match_list):
         # Turn ParseResults into a list for simpler comparison
         result = list(parser.parse_string(input_string))
@@ -36,7 +36,7 @@ class HPGLParsingTest(HPGLTest):
             self.fail("expected ParseException")
 
 
-class HPGLNumericParameterTests(HPGLParsingTest):
+class HPGLNumericParameterTests(HPGLPatternsTest):
     """Test the HPGL command parameter list related parsing patterns"""
 
     def test_numeric_parameter(self):
@@ -120,7 +120,7 @@ class HPGLNumericParameterTests(HPGLParsingTest):
         self.assert_parse_failure(numeric_parameter_pair_list, "12, , 13")
 
 
-class HPGLCommandTests(HPGLParsingTest):
+class HPGLCommandTests(HPGLPatternsTest):
     """
     Test the HPGL command parsing patterns
 
