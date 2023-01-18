@@ -17,7 +17,6 @@ from hpgl_input.hpgl_input import (
 )
 from tester import HPGLTest
 
-
 class HPGLParsingTest(HPGLTest):
     def assert_parse_result(self, parser, input_string, expected_match_list):
         # Turn ParseResults into a list for simpler comparison
@@ -34,7 +33,7 @@ class HPGLParsingTest(HPGLTest):
         except pp.ParseException:
             pass
         else:
-            self.fail("expected parse failure")
+            self.fail("expected ParseException")
 
 
 class HPGLNumericParameterTests(HPGLParsingTest):
