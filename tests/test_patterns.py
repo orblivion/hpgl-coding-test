@@ -17,6 +17,7 @@ from hpgl_input.hpgl_input import (
     cmd_other,
 )
 
+
 class HPGLPatternsTest(HPGLTest):
     def assert_parse_result(self, parser, input_string, expected_match_list):
         # Turn ParseResults into a list for simpler comparison

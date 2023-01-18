@@ -35,7 +35,7 @@ from inkex.localization import inkex_gettext as _
 # Some basics
 ##############
 
-all_chars = {chr(x) for x in range(256)}
+all_chars = {chr(x) for x in range(256)}  # TODO - utf-8?
 not_semicolon = pp.Char(all_chars - set(";"))
 
 # Page 9: "Most HP-GL/2 commands are terminated by a semicolon or the first
@@ -228,7 +228,9 @@ label_terminator = pp.Char(label_terminator_chars)
 # characters. Also note that the label_terminator might be a space, so we
 # leave_whitespace for everything up to that point.
 cmd_define_label_terminator = (
-    (mn_define_label_terminator + label_terminator).leave_whitespace()
+    (
+        pp.Opt(pp.White()) + mn_define_label_terminator + label_terminator
+    ).leave_whitespace()
     + pp.Opt(pp.Opt(numeric_separator) + pp.Char("01"))
     + pp.Opt(command_terminator)
 ) | (mn_define_label_terminator + command_terminator)
@@ -290,7 +292,15 @@ cmd_other = (
 def command(label_terminator):
     # Generalizing into one parser for a command. We need to pass in the
     # label_terminator because it affects parsing LB commands.
-    return cmd_pen_down | cmd_pen_up | cmd_label(label_terminator) + cmd_other
+    return (
+        cmd_pen_up
+        | cmd_pen_down
+        | cmd_polyline_encoded
+        | cmd_symbol_mode
+        | cmd_label(label_terminator)
+        | cmd_define_label_terminator
+        | cmd_other
+    )
 
 
 ##########################
@@ -312,11 +322,15 @@ def parse_hp_gl(document):
 
     this_ptr = 0
     this_command = None
+
+    # Cut off trailing whitespace so it's easier to determine the end of the file.
+    document = document.strip()
+
     while this_ptr < len(document):
         command_parser = command(label_terminator)
 
         try:
-            first, next_ptr, this_command = next(
+            this_command, first, next_ptr_offset = next(
                 command_parser.scan_string(document[this_ptr:])
             )
         except StopIteration:
@@ -327,7 +341,7 @@ def parse_hp_gl(document):
                 document[this_ptr : this_ptr + 20],
             )
 
-        if first != this_ptr:
+        if first != 0:
             # We want to use scan_string to parse one command at the given
             # position in the document, see where parsing stopped, and scan
             # again for the next command. However, if scan_string doesn't find
@@ -339,16 +353,46 @@ def parse_hp_gl(document):
                 # Give at least part of the document in the error message so we
                 # know what we failed to parse.
                 document[this_ptr : this_ptr + 20],
-                "Parsing began after %d characters" % this_ptr - first,
+                "Parsing began after %d characters" % first,
             )
 
         if this_command[0] in (mn_pen_up, mn_pen_down):
-            yield this_command
+            # TODO - put this in a function
 
-        if this_command[0] == mn_define_label_terminator:
+            # Find the grouped params within the parse result
+            parsed_params = []
+            for token in this_command:
+                if isinstance(token, pp.ParseResults):
+                    parsed_params = list(token)
+
+            int_params = []
+            # For lack of a convenient "does this match?" function
+            for param in parsed_params:
+                try:
+                    numeric_parameter.parse_string(param)
+                except pp.ParseException:
+                    pass
+                else:
+                    # TODO - clamp the numbers per the spec. also confirm that it's not a float
+                    int_params.append(int(param))
+
+            param_pairs = []
+            while int_params:
+                x, y, *int_params = int_params
+                param_pairs.append((x, y))
+
+            yield this_command[0], param_pairs
+
+        if len(this_command) == 2 and this_command[0] == mn_define_label_terminator:
             label_terminator = this_command[1]
+        if (
+            len(this_command) == 3
+            and this_command[0].strip() == ""
+            and this_command[1] == mn_define_label_terminator
+        ):
+            label_terminator = this_command[2]
 
-        this_ptr = next_ptr
+        this_ptr = this_ptr + next_ptr_offset
 
     # It seems safe to regard a zero-command file as invalid. Importing it into
     # Inkscape would be equivalent to creating a new file anyway.
@@ -414,8 +458,6 @@ class HpglInput(inkex.InputExtension):
 
     def parse_document(self, string, layer):
         """Convert a document stored in string to SVG elements."""
-
-        # TODO - clamp the numbers per the spec
 
         # TODO: Add your code here
         # parse the document, which is provided as utf8-decoded string in self.document,
