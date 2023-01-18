@@ -79,34 +79,40 @@ numeric_parameter = pp.Combine(
 # space, or in the case of a numeric parameter, with a + or - sign"
 numeric_separator = pp.Char(",+-")
 
-# Normal numeric parameter pairs. The last pair doesn't end with a separator,
-# but every other one does. numeric_separator are optional to allow for
-# whitespace, which is also a valid separator. Subtle point: even though the
-# numeric_separator is optional, it is impossible to accidentally parse two
-# adjacent numeric_parameter out of a single number, given how
+# Normal numeric parameter pairs. The first pair doesn't begin with a
+# separator, but every other one does. We make numeric_separator optional to
+# allow for whitespace, which is also a valid separator. Subtle point: even
+# though the  numeric_separator is optional, it is impossible to accidentally
+# parse two adjacent numeric_parameter out of a single number, given how
 # numeric_parameter is defined.
 
-numeric_parameter_pair = (
-    numeric_parameter
-    + pp.Opt(numeric_separator)
+first_numeric_parameter_pair = (
+    numeric_parameter + pp.Opt(numeric_separator) + numeric_parameter
+)
+next_numeric_parameter_pair = (
+    pp.Opt(numeric_separator)
     + numeric_parameter
     + pp.Opt(numeric_separator)
-)
-last_numeric_parameter_pair = (
-    numeric_parameter + pp.Opt(numeric_separator) + numeric_parameter
+    + numeric_parameter
 )
 
 # Page 125 (PD command) and Page 139 (PU command): "If an odd number of
 # coordinates is specified (an X coordinate without a corresponding Y
 # coordinate), the printer ignores the last unmatched coordinate"
-extra_numeric_parameter = numeric_parameter
+unpaired_first_numeric_parameter = numeric_parameter
+unpaired_next_numeric_parameter = pp.Opt(numeric_separator) + numeric_parameter
 
 # Zero or more "normal" pairs, followed either by a "last" pair, or an extra
 # unpaired parameter. Or, maybe no parameters at all.
-numeric_parameter_pair_list = pp.Opt(
-    pp.Group(pp.ZeroOrMore(numeric_parameter_pair) + last_numeric_parameter_pair)
-    | pp.Group(pp.ZeroOrMore(numeric_parameter_pair)) + extra_numeric_parameter
-)
+numeric_parameter_pair_list = (
+    (
+        pp.Group(
+            first_numeric_parameter_pair + pp.ZeroOrMore(next_numeric_parameter_pair)
+        )
+        + pp.Opt(unpaired_next_numeric_parameter)
+    )
+    | pp.Opt(unpaired_first_numeric_parameter)
+) + ~numeric_separator
 
 ###############
 # PD, Pen Down
