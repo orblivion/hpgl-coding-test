@@ -145,7 +145,9 @@ cmd_pen_up = mn_pen_up + numeric_parameter_pair_list + pp.Opt(command_terminator
 # semicolon is not a valid character in any parameter of PE. This makes it
 # pretty straightforward to skip.
 
-cmd_polyline_encoded = pp.ZeroOrMore(not_semicolon) + command_terminator
+cmd_polyline_encoded = (
+    mn_polyline_encoded + pp.ZeroOrMore(not_semicolon) + command_terminator
+)
 
 ########################
 # Skip: SM, Symbol Mode
