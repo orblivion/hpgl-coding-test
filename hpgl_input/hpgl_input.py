@@ -314,6 +314,9 @@ class HPGLParseException(Exception):
 
 def extract_param_pairs(cmd):
     """Helper function for extracting and preparing pairs of params from a parsed command"""
+    # The min and max for parameters in the PU and PD definitions
+    PARAM_MAX = 2**30 - 1
+    PARAM_MIN = -PARAM_MAX
 
     # Find the grouped params within the parse result
     parsed_params = []
@@ -322,7 +325,7 @@ def extract_param_pairs(cmd):
             parsed_params = list(token)
 
     # Filter out any non-numeric tokens that were parsed, convert them to ints
-    int_params = []
+    float_params = []
     for param in parsed_params:
         # For lack of a convenient "does this match?" function
         try:
@@ -330,13 +333,20 @@ def extract_param_pairs(cmd):
         except pp.ParseException:
             pass
         else:
-            # TODO - clamp the numbers per the spec. also confirm that it's not a float
-            int_params.append(int(param))
+            # Unclear from the documentation whether it's supposed to be a
+            # "real" or an integer, but we'll go with "real".
+            param = float(param)
+
+            # Page 12 "Sending a number outside the parameter range may produce
+            # unexpected results"
+            assert param <= PARAM_MAX and param >= PARAM_MIN, "param out of range"
+
+            float_params.append(param)
 
     # Put them in pairs
     param_pairs = []
-    while int_params:
-        x, y, *int_params = int_params
+    while float_params:
+        x, y, *float_params = float_params
         param_pairs.append((x, y))
 
     return param_pairs
