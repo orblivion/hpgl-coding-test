@@ -35,7 +35,10 @@ from inkex.localization import inkex_gettext as _
 # Some basics
 ##############
 
-all_chars = {chr(x) for x in range(256)}  # TODO - utf-8?
+# The input file is utf-8, but the text fields in the manual tend to refer to
+# ASCII. Neither UTF nor extended ASCII are mentioned anywhere in the document.
+# For now let's assume it's all ASCII.
+all_chars = {chr(x) for x in range(128)}
 not_semicolon = pp.Char(all_chars - set(";"))
 
 # Page 9: "Most HP-GL/2 commands are terminated by a semicolon or the first
