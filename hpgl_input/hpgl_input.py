@@ -386,10 +386,11 @@ def parse_hp_gl(document):
                 "Parsing began after %d characters" % first,
             )
 
-        # Yield the commands we care about
+        # Yield the commands we care about. Normalize them as upper. Send the
+        # param pairs well formatted.
         if this_command[0] in (mn_pen_up, mn_pen_down):
             param_pairs = extract_param_pairs(this_command)
-            yield this_command[0], param_pairs
+            yield this_command[0].upper(), param_pairs
 
         # Handle updating the label terminator
         if len(this_command) == 2 and this_command[0] == mn_define_label_terminator:
@@ -468,12 +469,22 @@ class HpglInput(inkex.InputExtension):
     def parse_document(self, string, layer):
         """Convert a document stored in string to SVG elements."""
 
-        # TODO: Add your code here
-        # parse the document, which is provided as utf8-decoded string in self.document,
-        # i.e. create path elements (inkex.PathElement), set their .path, and .style,
-        # and append them to "layer"
+        for cmd, coordinates in parse_hp_gl(string):
+            path_string = ""
+            if cmd == "PU":
+                for x, y in coordinates:
+                    path_string += "M %d %d " % (x, y)
+            elif cmd == "PD":
+                for x, y in coordinates:
+                    path_string += "L %d %d " % (x, y)
+            else:
+                raise Exception("Unexpected command")
 
-        inkex.errormsg("I still have work to do.")
+            elem = inkex.PathElement()
+            elem.path = inkex.Path(path_string)
+            elem.set("stroke", "black")
+            elem.set("fill", "none")
+            layer.append(elem)
 
 
 if __name__ == "__main__":
