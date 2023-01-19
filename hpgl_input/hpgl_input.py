@@ -482,8 +482,8 @@ class HpglInput(inkex.InputExtension):
     def parse_document(self, string, layer):
         """Convert a document stored in string to SVG elements."""
 
+        path_string = ""
         for cmd, coordinates in parse_hp_gl(string):
-            path_string = ""
             if cmd == "PU":
                 for x, y in coordinates:
                     path_string += "M %d %d " % (x, y)
@@ -493,11 +493,12 @@ class HpglInput(inkex.InputExtension):
             else:
                 raise Exception("Unexpected command")
 
-            elem = inkex.PathElement()
-            elem.path = inkex.Path(path_string)
-            elem.set("stroke", "black")
-            elem.set("fill", "none")
-            layer.append(elem)
+        elem = inkex.PathElement()
+        elem.path = inkex.Path(path_string)
+        elem.style["stroke"] = "black"
+        elem.style["stroke-width"] = 5.0
+        elem.style["fill"] = None
+        layer.append(elem)
 
 
 if __name__ == "__main__":
