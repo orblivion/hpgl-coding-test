@@ -1,3 +1,13 @@
+This was a programming test for a contracting position for Inkscape. Applicants have permission to post their submissions now that the deadline has passed.
+
+Some notes on my submission: I decided to go with a comprehensive interpretation of the task - namely, that in order to ignore all undesired commands, they must be properly parsed. Most can be parsed generically, but a few of them have special parsing rules. This is explained in code comments.
+
+See the changelog to see which parts are mine. It includes filling out `hpgl_input.py` as well as creating a couple test files.
+
+What follows is the original text of the assigmnent:
+
+---
+
 # Programming test for the Inkscape Python Developer contract role (2023 Q1)
 
 This repository contains the instructions to perform the programming test of the role that the Inkscape project is currently looking to fill.
